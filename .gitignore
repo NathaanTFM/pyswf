@@ -1,0 +1,6 @@
+*.pyc
+*.pyo
+build
+dist
+swf.egg-info
+.mypy_cache

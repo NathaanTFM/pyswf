@@ -1,0 +1,9 @@
+{
+    "python.linting.enabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyArgs": [
+        "--strict"
+    ],
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": false
+}
