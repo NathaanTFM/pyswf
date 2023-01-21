@@ -3,20 +3,20 @@ from typing import Any
 
 
 class Matrix:
-    scaleX: float | None
-    scaleY: float | None
+    scaleX: float
+    scaleY: float
 
-    rotateSkew0: float | None
-    rotateSkew1: float | None
+    rotateSkew0: float
+    rotateSkew1: float
 
     translateX: int
     translateY: int
     
     def __init__(self, translateX: int, translateY: int):
-        self.scaleX = None
-        self.scaleY = None
-        self.rotateSkew0 = None
-        self.rotateSkew1 = None
+        self.scaleX = 1.0
+        self.scaleY = 1.0
+        self.rotateSkew0 = 0.0
+        self.rotateSkew1 = 0.0
         self.translateX = translateX
         self.translateY = translateY
 

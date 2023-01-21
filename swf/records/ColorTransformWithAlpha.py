@@ -3,13 +3,13 @@ from typing import Any
 from swf.records.ColorTransform import ColorTransform
 
 class ColorTransformWithAlpha(ColorTransform):
-    alphaMultTerm: int | None
-    alphaAddTerm: int | None
+    alphaMultTerm: int
+    alphaAddTerm: int
 
     def __init__(self) -> None:
         super().__init__()
-        self.alphaMultTerm = None
-        self.alphaAddTerm = None
+        self.alphaMultTerm = 256
+        self.alphaAddTerm = 0
 
 
     def __eq__(self, other: Any) -> bool:

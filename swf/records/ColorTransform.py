@@ -3,22 +3,22 @@ from typing import Any
 
 
 class ColorTransform:
-    redMultTerm: int | None
-    greenMultTerm: int | None
-    blueMultTerm: int | None
+    redMultTerm: int
+    greenMultTerm: int
+    blueMultTerm: int
 
-    redAddTerm: int | None
-    greenAddTerm: int | None
-    blueAddTerm: int | None
+    redAddTerm: int
+    greenAddTerm: int
+    blueAddTerm: int
 
     def __init__(self) -> None:
-        self.redMultTerm = None
-        self.greenMultTerm = None
-        self.blueMultTerm = None
+        self.redMultTerm = 256
+        self.greenMultTerm = 256
+        self.blueMultTerm = 256
 
-        self.redAddTerm = None
-        self.greenAddTerm = None
-        self.blueAddTerm = None
+        self.redAddTerm = 0
+        self.greenAddTerm = 0
+        self.blueAddTerm = 0
 
 
     def __eq__(self, other: Any) -> bool:

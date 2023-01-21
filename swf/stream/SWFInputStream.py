@@ -56,7 +56,7 @@ class SWFInputStream:
         Skip n bytes from the buffer
         """
         assert self.__bitposition == 0
-        if self.__position + length >= len(self.__data):
+        if self.__position + length > len(self.__data):
             raise EOFError()
         
         self.__position += length
@@ -306,14 +306,14 @@ class SWFInputStream:
         """
         Read a MATRIX record
         """
-        scaleX, scaleY = None, None
+        scaleX, scaleY = 1.0, 1.0
         hasScale = self.readUB1()
         if hasScale:
             nScaleBits = self.readUB(5)
             scaleX = self.readFB(nScaleBits)
             scaleY = self.readFB(nScaleBits)
 
-        rotateSkew0, rotateSkew1 = None, None
+        rotateSkew0, rotateSkew1 = 0.0, 0.0
         hasRotate = self.readUB1()
         if hasRotate:
             nRotateBits = self.readUB(5)

@@ -214,25 +214,24 @@ class SWFOutputStream:
 
 
     def writeMATRIX(self, value: Matrix) -> None:
-        if (value.scaleX is None) ^ (value.scaleY is None):
-            raise Exception("scaleX and scaleY are not both (un)set")
-            
-        if (value.rotateSkew0 is None) ^ (value.rotateSkew1 is None):
-            raise Exception("scaleX and scaleY are not both (un)set")
-            
-        self.writeUB1(bool(value.scaleX is not None and value.scaleY is not None))
-        if value.scaleX is not None and value.scaleY is not None:
+        if value.scaleX != 1.0 and value.scaleY != 1.0:
             nScaleBits = self.calcFB(value.scaleX, value.scaleY)
+            self.writeUB1(True)
             self.writeUB(5, nScaleBits)
             self.writeFB(nScaleBits, value.scaleX)
             self.writeFB(nScaleBits, value.scaleY)
+
+        else:
+            self.writeUB1(False)
             
-        self.writeUB1(bool(value.rotateSkew0 is not None and value.rotateSkew1 is not None))
-        if value.rotateSkew0 is not None and value.rotateSkew1 is not None:
+        if value.rotateSkew0 != 0.0 and value.rotateSkew1 != 0.0:
             nRotateBits = self.calcFB(value.rotateSkew0, value.rotateSkew1)
+            self.writeUB1(True)
             self.writeUB(5, nRotateBits)
             self.writeFB(nRotateBits, value.rotateSkew0)
             self.writeFB(nRotateBits, value.rotateSkew1)
+        else:
+            self.writeUB1(False)
 
         nTranslateBits = self.calcSB(value.translateX, value.translateY)
         self.writeUB(5, nTranslateBits)
@@ -242,56 +241,56 @@ class SWFOutputStream:
 
 
     def writeCXFORM(self, value: ColorTransform) -> None:
-        hasMultTerms = value.redMultTerm is not None and value.greenMultTerm is not None and value.blueMultTerm is not None
-        hasAddTerms = value.redAddTerm is not None and value.greenAddTerm is not None and value.blueAddTerm is not None
+        hasMultTerms = value.redMultTerm != 256 and value.greenMultTerm != 256 and value.blueMultTerm != 256
+        hasAddTerms = value.redAddTerm != 0 and value.greenAddTerm != 0 and value.blueAddTerm != 0
 
         nbits = 0
         if hasMultTerms:
-            nbits = max(nbits, self.calcSB(value.redMultTerm, value.greenMultTerm, value.blueMultTerm)) # type: ignore
+            nbits = max(nbits, self.calcSB(value.redMultTerm, value.greenMultTerm, value.blueMultTerm))
         if hasAddTerms:
-            nbits = max(nbits, self.calcSB(value.redAddTerm, value.greenAddTerm, value.blueAddTerm)) # type: ignore
+            nbits = max(nbits, self.calcSB(value.redAddTerm, value.greenAddTerm, value.blueAddTerm))
 
         self.writeUB1(hasAddTerms)
         self.writeUB1(hasMultTerms)
         self.writeUB(4, nbits)
 
         if hasMultTerms:
-            self.writeSB(nbits, value.redMultTerm) # type: ignore
-            self.writeSB(nbits, value.greenMultTerm) # type: ignore
-            self.writeSB(nbits, value.blueMultTerm) # type: ignore
+            self.writeSB(nbits, value.redMultTerm)
+            self.writeSB(nbits, value.greenMultTerm)
+            self.writeSB(nbits, value.blueMultTerm)
 
         if hasAddTerms:
-            self.writeSB(nbits, value.redAddTerm) # type: ignore
-            self.writeSB(nbits, value.greenAddTerm) # type: ignore
-            self.writeSB(nbits, value.blueAddTerm) # type: ignore
+            self.writeSB(nbits, value.redAddTerm)
+            self.writeSB(nbits, value.greenAddTerm)
+            self.writeSB(nbits, value.blueAddTerm)
 
         self.align()
 
 
     def writeCXFORMWITHALPHA(self, value: ColorTransformWithAlpha) -> None:
-        hasMultTerms = value.redMultTerm is not None and value.greenMultTerm is not None and value.blueMultTerm is not None and value.alphaMultTerm is not None
-        hasAddTerms = value.redAddTerm is not None and value.greenAddTerm is not None and value.blueAddTerm is not None and value.alphaAddTerm is not None
+        hasMultTerms = value.redMultTerm != 256 and value.greenMultTerm != 256 and value.blueMultTerm != 256 and value.alphaMultTerm != 256
+        hasAddTerms = value.redAddTerm != 0 and value.greenAddTerm != 0 and value.blueAddTerm != 0 and value.alphaAddTerm != 0
 
         nbits = 0
         if hasMultTerms:
-            nbits = max(nbits, self.calcSB(value.redMultTerm, value.greenMultTerm, value.blueMultTerm, value.alphaMultTerm)) # type: ignore
+            nbits = max(nbits, self.calcSB(value.redMultTerm, value.greenMultTerm, value.blueMultTerm, value.alphaMultTerm))
         if hasAddTerms:
-            nbits = max(nbits, self.calcSB(value.redAddTerm, value.greenAddTerm, value.blueAddTerm, value.alphaAddTerm)) # type: ignore
+            nbits = max(nbits, self.calcSB(value.redAddTerm, value.greenAddTerm, value.blueAddTerm, value.alphaAddTerm))
 
         self.writeUB1(hasAddTerms)
         self.writeUB1(hasMultTerms)
         self.writeUB(4, nbits)
 
         if hasMultTerms:
-            self.writeSB(nbits, value.redMultTerm) # type: ignore
-            self.writeSB(nbits, value.greenMultTerm) # type: ignore
-            self.writeSB(nbits, value.blueMultTerm) # type: ignore
-            self.writeSB(nbits, value.alphaMultTerm) # type: ignore
+            self.writeSB(nbits, value.redMultTerm)
+            self.writeSB(nbits, value.greenMultTerm)
+            self.writeSB(nbits, value.blueMultTerm)
+            self.writeSB(nbits, value.alphaMultTerm)
 
         if hasAddTerms:
-            self.writeSB(nbits, value.redAddTerm) # type: ignore
-            self.writeSB(nbits, value.greenAddTerm) # type: ignore
-            self.writeSB(nbits, value.blueAddTerm) # type: ignore
-            self.writeSB(nbits, value.alphaAddTerm) # type: ignore
+            self.writeSB(nbits, value.redAddTerm)
+            self.writeSB(nbits, value.greenAddTerm)
+            self.writeSB(nbits, value.blueAddTerm)
+            self.writeSB(nbits, value.alphaAddTerm)
 
         self.align()
