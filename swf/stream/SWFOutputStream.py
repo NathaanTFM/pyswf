@@ -224,7 +224,7 @@ class SWFOutputStream:
         else:
             self.writeUB1(False)
             
-        if value.rotateSkew0 != 0.0 and value.rotateSkew1 != 0.0:
+        if value.rotateSkew0 != 0.0 or value.rotateSkew1 != 0.0:
             nRotateBits = self.calcFB(value.rotateSkew0, value.rotateSkew1)
             self.writeUB1(True)
             self.writeUB(5, nRotateBits)
@@ -241,8 +241,8 @@ class SWFOutputStream:
 
 
     def writeCXFORM(self, value: ColorTransform) -> None:
-        hasMultTerms = value.redMultTerm != 256 and value.greenMultTerm != 256 and value.blueMultTerm != 256
-        hasAddTerms = value.redAddTerm != 0 and value.greenAddTerm != 0 and value.blueAddTerm != 0
+        hasMultTerms = value.redMultTerm != 256 or value.greenMultTerm != 256 or value.blueMultTerm != 256
+        hasAddTerms = value.redAddTerm != 0 or value.greenAddTerm != 0 or value.blueAddTerm != 0
 
         nbits = 0
         if hasMultTerms:
@@ -268,8 +268,8 @@ class SWFOutputStream:
 
 
     def writeCXFORMWITHALPHA(self, value: ColorTransformWithAlpha) -> None:
-        hasMultTerms = value.redMultTerm != 256 and value.greenMultTerm != 256 and value.blueMultTerm != 256 and value.alphaMultTerm != 256
-        hasAddTerms = value.redAddTerm != 0 and value.greenAddTerm != 0 and value.blueAddTerm != 0 and value.alphaAddTerm != 0
+        hasMultTerms = value.redMultTerm != 256 or value.greenMultTerm != 256 or value.blueMultTerm != 256 or value.alphaMultTerm != 256
+        hasAddTerms = value.redAddTerm != 0 or value.greenAddTerm != 0 or value.blueAddTerm != 0 or value.alphaAddTerm != 0
 
         nbits = 0
         if hasMultTerms:
