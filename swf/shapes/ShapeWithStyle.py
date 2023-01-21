@@ -1,6 +1,7 @@
 from __future__ import annotations
 from swf.shapes.FillStyle import FillStyle
 from swf.shapes.LineStyle import LineStyle
+from swf.shapes.LineStyle2 import LineStyle2
 from swf.shapes.ShapeRecord import EndShapeRecord, ShapeRecord, StyleChangeRecord
 
 from typing import TYPE_CHECKING
@@ -22,7 +23,11 @@ class ShapeWithStyle:
     @staticmethod
     def read(stream: SWFInputStream, tag: int) -> ShapeWithStyle:
         fillStyles = FillStyle.readArray(stream, tag)
-        lineStyles = LineStyle.readArray(stream, tag)
+
+        if tag == 4:
+            lineStyles = LineStyle2.readArray(stream, tag)
+        else:
+            lineStyles = LineStyle.readArray(stream, tag)
         
         numFillBits = stream.readUB(4)
         numLineBits = stream.readUB(4)
@@ -46,7 +51,11 @@ class ShapeWithStyle:
 
     def write(self, stream: SWFOutputStream, tag: int) -> None:
         FillStyle.writeArray(stream, self.fillStyles, tag)
-        LineStyle.writeArray(stream, self.lineStyles, tag)
+
+        if tag == 4:
+            LineStyle2.writeArray(stream, self.lineStyles, tag)
+        else:
+            LineStyle.writeArray(stream, self.lineStyles, tag)
 
         numFillBits = stream.calcUB(len(self.fillStyles))
         numLineBits = stream.calcUB(len(self.lineStyles))

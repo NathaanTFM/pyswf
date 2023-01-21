@@ -1,6 +1,7 @@
 from __future__ import annotations
 from swf.shapes.FillStyle import FillStyle
 from swf.shapes.LineStyle import LineStyle
+from swf.shapes.LineStyle2 import LineStyle2
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -75,7 +76,11 @@ class ShapeRecord:
                 stream.align()
                 
                 fillStyles = FillStyle.readArray(stream, tag)
-                lineStyles = LineStyle.readArray(stream, tag)
+
+                if tag == 4:
+                    lineStyles = LineStyle2.readArray(stream, tag)
+                else:
+                    lineStyles = LineStyle.readArray(stream, tag)
 
             record = StyleChangeRecord(moveDeltaX, moveDeltaY, fillStyle0, fillStyle1, lineStyle, fillStyles, lineStyles)
             return record
@@ -140,7 +145,11 @@ class StyleChangeRecord(ShapeRecord):
             stream.align()
 
             FillStyle.writeArray(stream, self.fillStyles, tag)
-            LineStyle.writeArray(stream, self.lineStyles, tag)
+
+            if tag == 4:
+                LineStyle2.writeArray(stream, self.lineStyles, tag)
+            else:
+                LineStyle.writeArray(stream, self.lineStyles, tag)
 
 
 class StraightEdgeRecord(ShapeRecord):

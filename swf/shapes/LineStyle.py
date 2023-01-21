@@ -9,9 +9,9 @@ if TYPE_CHECKING:
 
 class LineStyle:
     width: int
-    color: RGB | RGBA
+    color: RGB | RGBA | None
 
-    def __init__(self, width: int, color: RGB | RGBA):
+    def __init__(self, width: int, color: RGB | RGBA | None):
         self.width = width
         self.color = color
 
