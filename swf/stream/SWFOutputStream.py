@@ -214,7 +214,7 @@ class SWFOutputStream:
 
 
     def writeMATRIX(self, value: Matrix) -> None:
-        if value.scaleX != 1.0 and value.scaleY != 1.0:
+        if value.scaleX != 1.0 or value.scaleY != 1.0:
             nScaleBits = self.calcFB(value.scaleX, value.scaleY)
             self.writeUB1(True)
             self.writeUB(5, nScaleBits)
