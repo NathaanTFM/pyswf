@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages # type: ignore
+from distutils.core import setup # type: ignore
+from setuptools import find_packages
 
 setup(
     name="swf",

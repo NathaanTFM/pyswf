@@ -7,9 +7,9 @@ from swf.abc.namespaces.BaseNamespace import BaseNamespace
 class MultinameL(BaseMultiname):
     kind = 0x1B
 
-    nsSet: list[BaseNamespace]
+    nsSet: tuple[BaseNamespace, ...]
 
-    def __init__(self, nsSet: list[BaseNamespace]) -> None:
+    def __init__(self, nsSet: tuple[BaseNamespace, ...]) -> None:
         self.nsSet = nsSet
 
 

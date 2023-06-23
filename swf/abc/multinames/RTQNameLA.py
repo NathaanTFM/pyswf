@@ -8,3 +8,7 @@ class RTQNameLA(RTQNameL):
 
     def __eq__(self, other: Any) -> bool:
         return type(other) == RTQNameLA
+
+
+    def __hash__(self) -> int:
+        return hash((self.kind,))

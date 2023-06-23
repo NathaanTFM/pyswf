@@ -8,3 +8,7 @@ class QNameA(QName):
     
     def __eq__(self, other: Any) -> bool:
         return type(other) == QNameA and self.name == other.name and self.ns == other.ns
+
+
+    def __hash__(self) -> int:
+        return hash((self.kind, self.ns, self.name))

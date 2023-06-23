@@ -8,3 +8,7 @@ class MultinameA(Multiname):
 
     def __eq__(self, other: Any) -> bool:
         return type(other) == MultinameA and self.name == other.name and self.nsSet == other.nsSet
+
+
+    def __hash__(self) -> int:
+        return hash((self.kind, self.name, *self.nsSet))

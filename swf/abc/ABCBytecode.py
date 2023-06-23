@@ -10,6 +10,7 @@ from swf.abc.namespaces.BaseNamespace import BaseNamespace
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from swf.abc.ABCFile import ABCFile
+    from swf.abc.ABCExporter import ABCExporter
 
 
 
@@ -73,7 +74,7 @@ class ABCBytecode:
         return target
 
 
-    def assemble(self, abc: ABCFile) -> bytes:
+    def assemble(self, exporter: ABCExporter) -> bytes:
         # target id to binary pos
         self.targets = {}
 
@@ -127,35 +128,35 @@ class ABCBytecode:
                         
                     elif arg == Argument.Int:
                         assert type(value) == int
-                        stream.writeU30(abc._integerPool.index(value))
+                        stream.writeU30(exporter.getIntegerIndex(value))
                         
                     elif arg == Argument.UInt:
                         assert type(value) == int
-                        stream.writeU30(abc._uintegerPool.index(value))
+                        stream.writeU30(exporter.getUIntegerIndex(value))
                         
                     elif arg == Argument.Double:
                         assert type(value) == float
-                        stream.writeU30(abc._doublePool.index(value))
+                        stream.writeU30(exporter.getDoubleIndex(value))
                         
                     elif arg == Argument.String:
                         assert type(value) == str
-                        stream.writeU30(abc._stringPool.index(value))
+                        stream.writeU30(exporter.getStringIndex(value))
 
                     elif arg == Argument.Namespace:
                         assert isinstance(value, BaseNamespace)
-                        stream.writeU30(abc._namespacePool.index(value))
+                        stream.writeU30(exporter.getNamespaceIndex(value))
 
                     elif arg == Argument.Multiname:
                         assert isinstance(value, BaseMultiname)
-                        stream.writeU30(abc._multinamePool.index(value))
+                        stream.writeU30(exporter.getMultinameIndex(value))
 
                     elif arg == Argument.Class:
                         assert type(value) == Class
-                        stream.writeU30(abc._classes.index(value))
+                        stream.writeU30(exporter.getClassIndex(value))
 
                     elif arg == Argument.Method:
                         assert type(value) == Method
-                        stream.writeU30(abc._methods.index(value))
+                        stream.writeU30(exporter.getMethodIndex(value))
 
                     elif arg == Argument.Target:
                         assert type(value) == ABCTarget
@@ -246,28 +247,28 @@ class ABCBytecode:
                     args.append(val)
 
                 elif arg == Argument.Int:
-                    args.append(abc._integerPool[stream.readU30()])
+                    args.append(abc.getInteger(stream.readU30()))
 
                 elif arg == Argument.UInt:
-                    args.append(abc._uintegerPool[stream.readU30()])
+                    args.append(abc.getUInteger(stream.readU30()))
 
                 elif arg == Argument.Double:
-                    args.append(abc._doublePool[stream.readU30()])
+                    args.append(abc.getDouble(stream.readU30()))
 
                 elif arg == Argument.String:
-                    args.append(abc._stringPool[stream.readU30()])
+                    args.append(abc.getString(stream.readU30()))
 
                 elif arg == Argument.Namespace:
-                    args.append(abc._namespacePool[stream.readU30()])
+                    args.append(abc.getNamespace(stream.readU30()))
 
                 elif arg == Argument.Multiname:
-                    args.append(abc._multinamePool[stream.readU30()])
+                    args.append(abc.getMultiname(stream.readU30()))
 
                 elif arg == Argument.Class:
-                    args.append(abc._classes[stream.readU30()])
+                    args.append(abc.getClass(stream.readU30()))
 
                 elif arg == Argument.Method:
-                    args.append(abc._methods[stream.readU30()])
+                    args.append(abc.getMethod(stream.readU30()))
 
                 elif arg == Argument.Target:
                     target = stream.readS24() + position + 4

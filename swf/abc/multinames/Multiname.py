@@ -8,9 +8,9 @@ class Multiname(BaseMultiname):
     kind = 0x09
 
     name: str | None
-    nsSet: list[BaseNamespace]
+    nsSet: tuple[BaseNamespace, ...]
 
-    def __init__(self, name: str | None, nsSet: list[BaseNamespace]):
+    def __init__(self, name: str | None, nsSet: tuple[BaseNamespace, ...]):
         self.name = name
         self.nsSet = nsSet
 
