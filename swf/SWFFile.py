@@ -26,7 +26,7 @@ class SWFFile:
 
     tags: list[Tag]
 
-    def __init__(self, swfData: bytes | None = None):
+    def __init__(self, swfData: bytes | None = None, interestedSet: set[int] | None = None):
         """
         Initializes a SWF File with dummy values
         If data is passed, the passed swf file is parsed instead.
@@ -65,7 +65,7 @@ class SWFFile:
             # read tags
             self.tags = []
             while stream.available():
-                tag = TagStream.readTag(stream)
+                tag = TagStream.readTag(stream, interestedSet)
                 self.tags.append(tag)
 
         else:

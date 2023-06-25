@@ -6,10 +6,10 @@ from swf.stream.SWFInputStream import SWFInputStream
 from swf.stream.SWFOutputStream import SWFOutputStream
 
 class TagStream:
-    notImplemented: list[str] = []
+    notImplemented: set[str] = set()
 
     @staticmethod
-    def readTag(stream: SWFInputStream) -> Tag:
+    def readTag(stream: SWFInputStream, interestedSet: set[int] | None = None) -> Tag:
         """
         Read a Tag
         """
@@ -21,6 +21,14 @@ class TagStream:
         if tagLength == 0x3F:
             tagLength = stream.readUI32()
 
+        # read our tag data
+        tagData = stream.read(tagLength)
+        stream = SWFInputStream(stream.version, tagData)
+
+        # check if we're interested in this tag, if not, just skip
+        if interestedSet is not None and tagCode not in interestedSet:
+            return RawTag(tagCode, tagData)
+
         # find tag class
         if tagCode >= len(TagDict):
             raise ValueError("tag %d not found" % tagCode)
@@ -28,11 +36,7 @@ class TagStream:
         tagType = TagDict[tagCode]
         if tagType is None:
             raise ValueError("tag %d not found" % tagCode)
-
-        # read our tag data
-        tagData = stream.read(tagLength)
-        stream = SWFInputStream(stream.version, tagData)
-
+            
         # create our tag
         tag = tagType.read(stream)
 
@@ -46,7 +50,7 @@ class TagStream:
         else:
             if tagType.__name__ not in TagStream.notImplemented:
                 print("not implemented %s" % tagType.__name__)
-                TagStream.notImplemented.append(tagType.__name__)
+                TagStream.notImplemented.add(tagType.__name__)
                 
             tag = RawTag(tagCode, tagData)
             #tag._tmp = tagData # type: ignore
