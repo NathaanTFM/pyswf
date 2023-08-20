@@ -1,15 +1,15 @@
 from __future__ import annotations
 from swf.records.RGBA import RGBA
-from swf.shapes.LineStyle import LineStyle
-from swf.shapes.FillStyle import FillStyle
+from swf.shapes.MorphFillStyle import MorphFillStyle
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from swf.stream.SWFInputStream import SWFInputStream
     from swf.stream.SWFOutputStream import SWFOutputStream
 
-class LineStyle2:
-    width: int
+class MorphLineStyle2:
+    startWidth: int
+    endWidth: int
     startCapStyle: int
     joinStyle: int
     hasFillFlag: bool
@@ -19,11 +19,13 @@ class LineStyle2:
     noClose: bool
     endCapStyle: int
     miterLimitFactor: int | None
-    color: RGBA | None
-    fillType: FillStyle | None
+    startColor: RGBA | None
+    endColor: RGBA | None
+    fillType: MorphFillStyle | None
 
-    def __init__(self, width: int, startCapStyle: int, joinStyle: int, hasFillFlag: bool, noHScaleFlag: bool, noVScaleFlag: bool, pixelHintingFlag: bool, noClose: bool, endCapStyle: int, miterLimitFactor: int | None, color: RGBA | None, fillType: FillStyle | None) -> None:
-        self.width = width
+    def __init__(self, startWidth: int, endWidth: int, startCapStyle: int, joinStyle: int, hasFillFlag: bool, noHScaleFlag: bool, noVScaleFlag: bool, pixelHintingFlag: bool, noClose: bool, endCapStyle: int, miterLimitFactor: int | None, startColor: RGBA | None, endColor: RGBA | None, fillType: MorphFillStyle | None) -> None:
+        self.startWidth = startWidth
+        self.endWidth = endWidth
         self.startCapStyle = startCapStyle
         self.joinStyle = joinStyle
         self.hasFillFlag = hasFillFlag
@@ -33,13 +35,15 @@ class LineStyle2:
         self.noClose = noClose
         self.endCapStyle = endCapStyle
         self.miterLimitFactor = miterLimitFactor
-        self.color = color
+        self.startColor = startColor
+        self.endColor = endColor
         self.fillType = fillType
 
 
     @staticmethod
-    def read(stream: SWFInputStream, tag: int) -> LineStyle2:
-        width = stream.readUI16()
+    def read(stream: SWFInputStream, tag: int) -> MorphLineStyle2:
+        startWidth = stream.readUI16()
+        endWidth = stream.readUI16()
         startCapStyle = stream.readUB(2)
         joinStyle = stream.readUB(2)
         hasFillFlag = bool(stream.readUB(1))
@@ -57,19 +61,21 @@ class LineStyle2:
         if joinStyle == 2:
             miterLimitFactor = stream.readUI16()
         
-        color = None
+        startColor = endColor = None
         if hasFillFlag == 0:
-            color = stream.readRGBA()
+            startColor = stream.readRGBA()
+            endColor = stream.readRGBA()
         
         fillType = None
         if hasFillFlag == 1:
-            fillType = FillStyle.read(stream, tag)
+            fillType = MorphFillStyle.read(stream, tag)
 
-        return LineStyle2(width, startCapStyle, joinStyle, hasFillFlag, noHScaleFlag, noVScaleFlag, pixelHintingFlag, noClose, endCapStyle, miterLimitFactor, color, fillType)
+        return MorphLineStyle2(startWidth, endWidth, startCapStyle, joinStyle, hasFillFlag, noHScaleFlag, noVScaleFlag, pixelHintingFlag, noClose, endCapStyle, miterLimitFactor, startColor, endColor, fillType)
 
 
     def write(self, stream: SWFOutputStream, tag: int) -> None:
-        stream.writeUI16(self.width)
+        stream.writeUI16(self.startWidth)
+        stream.writeUI16(self.endWidth)
         stream.writeUB(2, self.startCapStyle)
         stream.writeUB(2, self.joinStyle)
         stream.writeUB(1, self.hasFillFlag)
@@ -87,10 +93,14 @@ class LineStyle2:
             stream.writeUI16(self.miterLimitFactor)
             
         if self.hasFillFlag == 0:
-            if type(self.color) != RGBA:
-                raise ValueError("color is not RGBA")
+            if type(self.startColor) != RGBA:
+                raise ValueError("startColor is not RGBA")
+            
+            if type(self.endColor) != RGBA:
+                raise ValueError("endColor is not RGBA")
 
-            stream.writeRGBA(self.color)
+            stream.writeRGBA(self.startColor)
+            stream.writeRGBA(self.endColor)
             
         if self.hasFillFlag == 1:
             if self.fillType is None:
@@ -100,20 +110,20 @@ class LineStyle2:
 
 
     @staticmethod
-    def readArray(stream: SWFInputStream, tag: int) -> list[LineStyle2]: 
+    def readArray(stream: SWFInputStream, tag: int) -> list[MorphLineStyle2]: 
         count = stream.readUI8()
         if count == 0xFF:
             count = stream.readUI16()
 
-        res: list[LineStyle2] = []
+        res: list[MorphLineStyle2] = []
         for _ in range(count):
-            res.append(LineStyle2.read(stream, tag))
+            res.append(MorphLineStyle2.read(stream, tag))
 
         return res
 
 
     @staticmethod
-    def writeArray(stream: SWFOutputStream, array: list[LineStyle2], tag: int) -> None:
+    def writeArray(stream: SWFOutputStream, array: list[MorphLineStyle2], tag: int) -> None:
         if len(array) >= 0xFF:
             stream.writeUI8(0xFF)
             stream.writeUI16(len(array))
@@ -121,7 +131,4 @@ class LineStyle2:
             stream.writeUI8(len(array))
 
         for elem in array:
-            if type(elem) != LineStyle2:
-                raise ValueError("expected LineStyle2")
-
             elem.write(stream, tag)

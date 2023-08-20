@@ -1,7 +1,9 @@
 from __future__ import annotations
-from swf.stream.SWFOutputStream import SWFOutputStream
+from swf.shapes.FillStyle import FillStyle
+from swf.shapes.LineStyle2 import LineStyle2
 from swf.tags.Tag import Tag
 from swf.stream.SWFInputStream import SWFInputStream
+from swf.stream.SWFOutputStream import SWFOutputStream
 from swf.records.Rectangle import Rectangle
 from swf.shapes.ShapeWithStyle import ShapeWithStyle
 
@@ -19,9 +21,9 @@ class DefineShape4Tag(Tag):
     usesFillWindingRule: bool
     usesNonScalingStrokes: bool
     usesScalingStrokes: bool
-    shapes: ShapeWithStyle
+    shapes: ShapeWithStyle[FillStyle, LineStyle2]
 
-    def __init__(self, shapeId: int, shapeBounds: Rectangle, edgeBounds: Rectangle, usesFillWindingRule: bool, usesNonScalingStrokes: bool, usesScalingStrokes: bool, shapes: ShapeWithStyle) -> None:
+    def __init__(self, shapeId: int, shapeBounds: Rectangle, edgeBounds: Rectangle, usesFillWindingRule: bool, usesNonScalingStrokes: bool, usesScalingStrokes: bool, shapes: ShapeWithStyle[FillStyle, LineStyle2]) -> None:
         self.shapeId = shapeId
         self.shapeBounds = shapeBounds
         self.edgeBounds = edgeBounds
@@ -45,7 +47,7 @@ class DefineShape4Tag(Tag):
         usesFillWindingRule = bool(stream.readUB(1))
         usesNonScalingStrokes = bool(stream.readUB(1))
         usesScalingStrokes = bool(stream.readUB(1))
-        shapes = ShapeWithStyle.read(stream, 4)
+        shapes = ShapeWithStyle.read(stream, 4, FillStyle, LineStyle2)
 
         return DefineShape4Tag(shapeId, shapeBounds, edgeBounds, usesFillWindingRule, usesNonScalingStrokes, usesScalingStrokes, shapes)
 
@@ -61,4 +63,4 @@ class DefineShape4Tag(Tag):
         stream.writeUB(1, self.usesFillWindingRule)
         stream.writeUB(1, self.usesNonScalingStrokes)
         stream.writeUB(1, self.usesScalingStrokes)
-        self.shapes.write(stream, 4)
+        self.shapes.write(stream, 4, FillStyle, LineStyle2)

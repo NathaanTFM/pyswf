@@ -135,7 +135,7 @@ class FillStyle:
 
     @staticmethod
     def writeArray(stream: SWFOutputStream, array: list[FillStyle], tag: int) -> None:
-        if len(array) > 0xFF and tag == 2:
+        if len(array) > 0xFF and tag < 2:
             raise Exception("too long array for swf version")
             
         if len(array) >= 0xFF and tag >= 2:

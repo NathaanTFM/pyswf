@@ -15,26 +15,19 @@ if TYPE_CHECKING:
 F = TypeVar("F", FillStyle, MorphFillStyle)
 L = TypeVar("L", LineStyle, LineStyle2, MorphLineStyle, MorphLineStyle2)
 
-class ShapeWithStyle(Generic[F, L]):
-    fillStyles: list[F]
-    lineStyles: list[L]
+class Shape(Generic[F, L]):
     shapeRecords: list[ShapeRecord[F, L]]
 
-    def __init__(self, fillStyles: list[F], lineStyles: list[L], shapeRecords: list[ShapeRecord[F, L]]):
-        self.fillStyles = fillStyles
-        self.lineStyles = lineStyles
+    def __init__(self, shapeRecords: list[ShapeRecord[F, L]]):
         self.shapeRecords = shapeRecords
         
 
     @staticmethod
-    def read(stream: SWFInputStream, tag: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> ShapeWithStyle[F, L]:
-        fillStyles: list[F] = fillStyleType.readArray(stream, tag)
-        lineStyles: list[L] = lineStyleType.readArray(stream, tag)
-        
+    def read(stream: SWFInputStream, tag: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> Shape[F, L]:
+        shapeRecords: list[ShapeRecord[F, L]] = []
         numFillBits = stream.readUB(4)
         numLineBits = stream.readUB(4)
-
-        shapeRecords: list[ShapeRecord[F, L]] = []
+        
         while True:
             shapeRecord = ShapeRecord.read(stream, tag, numFillBits, numLineBits, fillStyleType, lineStyleType)
             shapeRecords.append(shapeRecord)
@@ -48,16 +41,10 @@ class ShapeWithStyle(Generic[F, L]):
                 break
 
         stream.align()
-        return ShapeWithStyle(fillStyles, lineStyles, shapeRecords)
+        return Shape(shapeRecords)
 
 
-    def write(self, stream: SWFOutputStream, tag: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> None:
-        fillStyleType.writeArray(stream, self.fillStyles, tag)
-        lineStyleType.writeArray(stream, self.lineStyles, tag)
-
-        numFillBits = stream.calcUB(len(self.fillStyles))
-        numLineBits = stream.calcUB(len(self.lineStyles))
-
+    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> None:
         stream.writeUB(4, numFillBits)
         stream.writeUB(4, numLineBits)
 

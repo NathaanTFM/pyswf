@@ -1,7 +1,9 @@
 from __future__ import annotations
-from swf.stream.SWFOutputStream import SWFOutputStream
+from swf.shapes.FillStyle import FillStyle
+from swf.shapes.LineStyle import LineStyle
 from swf.tags.Tag import Tag
 from swf.stream.SWFInputStream import SWFInputStream
+from swf.stream.SWFOutputStream import SWFOutputStream
 from swf.records.Rectangle import Rectangle
 from swf.shapes.ShapeWithStyle import ShapeWithStyle
 
@@ -16,9 +18,9 @@ class DefineShape2Tag(Tag):
 
     shapeId: int
     shapeBounds: Rectangle
-    shapes: ShapeWithStyle
+    shapes: ShapeWithStyle[FillStyle, LineStyle]
 
-    def __init__(self, shapeId: int, shapeBounds: Rectangle, shapes: ShapeWithStyle) -> None:
+    def __init__(self, shapeId: int, shapeBounds: Rectangle, shapes: ShapeWithStyle[FillStyle, LineStyle]) -> None:
         self.shapeId = shapeId
         self.shapeBounds = shapeBounds
         self.shapes = shapes
@@ -31,7 +33,7 @@ class DefineShape2Tag(Tag):
 
         shapeId = stream.readUI16()
         shapeBounds = stream.readRECT()
-        shapes = ShapeWithStyle.read(stream, 2)
+        shapes = ShapeWithStyle.read(stream, 2, FillStyle, LineStyle)
         return DefineShape2Tag(shapeId, shapeBounds, shapes)
 
 
@@ -41,4 +43,4 @@ class DefineShape2Tag(Tag):
 
         stream.writeUI16(self.shapeId)
         stream.writeRECT(self.shapeBounds)
-        self.shapes.write(stream, 2)
+        self.shapes.write(stream, 2, FillStyle, LineStyle)

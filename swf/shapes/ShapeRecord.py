@@ -1,16 +1,23 @@
 from __future__ import annotations
 from swf.shapes.FillStyle import FillStyle
+from swf.shapes.MorphFillStyle import MorphFillStyle
 from swf.shapes.LineStyle import LineStyle
 from swf.shapes.LineStyle2 import LineStyle2
+from swf.shapes.MorphLineStyle import MorphLineStyle
+from swf.shapes.MorphLineStyle2 import MorphLineStyle2
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Generic, TypeVar, Type
 if TYPE_CHECKING:
     from swf.stream.SWFInputStream import SWFInputStream
     from swf.stream.SWFOutputStream import SWFOutputStream
 
-class ShapeRecord:
+
+F = TypeVar("F", FillStyle, MorphFillStyle)
+L = TypeVar("L", LineStyle, LineStyle2, MorphLineStyle, MorphLineStyle2)
+
+class ShapeRecord(Generic[F, L]):
     @staticmethod
-    def read(stream: SWFInputStream, tag: int, numFillBits: int, numLineBits: int) -> ShapeRecord:
+    def read(stream: SWFInputStream, tag: int, numFillBits: int, numLineBits: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> ShapeRecord[F, L]:
         typeFlag = stream.readUB1()
         if typeFlag:
             straightFlag = stream.readUB1()
@@ -75,40 +82,38 @@ class ShapeRecord:
                 # so we must realign before reading
                 stream.align()
                 
-                fillStyles = FillStyle.readArray(stream, tag)
+                fillStyles = fillStyleType.readArray(stream, tag)
+                lineStyles = lineStyleType.readArray(stream, tag)
 
-                if tag == 4:
-                    lineStyles = LineStyle2.readArray(stream, tag)
-                else:
-                    lineStyles = LineStyle.readArray(stream, tag)
+                # then numfillbits and numlinebits gets read but outside
 
             record = StyleChangeRecord(moveDeltaX, moveDeltaY, fillStyle0, fillStyle1, lineStyle, fillStyles, lineStyles)
             return record
 
 
-    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int) -> None:
+    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> None:
         raise NotImplementedError()
 
 
 
-class EndShapeRecord(ShapeRecord):
-    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int) -> None:
+class EndShapeRecord(ShapeRecord[F, L]):
+    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> None:
         stream.writeUB(6, 0)
 
 
-class StyleChangeRecord(ShapeRecord):
+class StyleChangeRecord(ShapeRecord[F, L]):
     moveDeltaX: int | None
     moveDeltaY: int | None
     fillStyle0: int | None
     fillStyle1: int | None
     lineStyle: int | None
-    fillStyles: list[FillStyle] | None
-    lineStyles: list[LineStyle] | None
+    fillStyles: list[F] | None
+    lineStyles: list[L] | None
 
     _numFillBits: int
     _numLineBits: int
 
-    def __init__(self, moveDeltaX: int | None = None, moveDeltaY: int | None = None, fillStyle0: int | None = None, fillStyle1: int | None = None, lineStyle: int | None = None, fillStyles: list[FillStyle] | None = None, lineStyles: list[LineStyle] | None = None) -> None:
+    def __init__(self, moveDeltaX: int | None = None, moveDeltaY: int | None = None, fillStyle0: int | None = None, fillStyle1: int | None = None, lineStyle: int | None = None, fillStyles: list[F] | None = None, lineStyles: list[L] | None = None) -> None:
         self.moveDeltaX = moveDeltaX
         self.moveDeltaY = moveDeltaY
         self.fillStyle0 = fillStyle0
@@ -118,7 +123,7 @@ class StyleChangeRecord(ShapeRecord):
         self.lineStyles = lineStyles
 
 
-    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int) -> None:
+    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> None:
         stream.writeUB1(False)
         stream.writeUB1(self.fillStyles is not None and self.lineStyles is not None)
         stream.writeUB1(self.lineStyle is not None)
@@ -144,15 +149,13 @@ class StyleChangeRecord(ShapeRecord):
         if self.fillStyles is not None and self.lineStyles is not None:
             stream.align()
 
-            FillStyle.writeArray(stream, self.fillStyles, tag)
+            fillStyleType.writeArray(stream, self.fillStyles, tag)
+            lineStyleType.writeArray(stream, self.lineStyles, tag)
 
-            if tag == 4:
-                LineStyle2.writeArray(stream, self.lineStyles, tag)
-            else:
-                LineStyle.writeArray(stream, self.lineStyles, tag)
+            # numFillBits and numLineBits are written somewhere else
 
 
-class StraightEdgeRecord(ShapeRecord):
+class StraightEdgeRecord(ShapeRecord[F, L]):
     deltaX: int
     deltaY: int
 
@@ -161,7 +164,7 @@ class StraightEdgeRecord(ShapeRecord):
         self.deltaY = deltaY
 
 
-    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int) -> None:
+    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> None:
         stream.writeUB1(True)
         stream.writeUB1(True)
 
@@ -185,7 +188,7 @@ class StraightEdgeRecord(ShapeRecord):
 
 
 
-class CurvedEdgeRecord(ShapeRecord):
+class CurvedEdgeRecord(ShapeRecord[F, L]):
     controlDeltaX: int
     controlDeltaY: int
     anchorDeltaX: int
@@ -198,7 +201,7 @@ class CurvedEdgeRecord(ShapeRecord):
         self.anchorDeltaY = anchorDeltaY
 
 
-    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int) -> None:
+    def write(self, stream: SWFOutputStream, tag: int, numFillBits: int, numLineBits: int, fillStyleType: Type[F], lineStyleType: Type[L]) -> None:
         stream.writeUB1(True)
         stream.writeUB1(False)
 
