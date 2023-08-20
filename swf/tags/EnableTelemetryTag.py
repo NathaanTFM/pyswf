@@ -1,6 +1,7 @@
 from __future__ import annotations
 from swf.tags.Tag import Tag
 from swf.stream.SWFInputStream import SWFInputStream
+from swf.stream.SWFOutputStream import SWFOutputStream
 
 class EnableTelemetryTag(Tag):
     """
@@ -35,7 +36,7 @@ class EnableTelemetryTag(Tag):
         return EnableTelemetryTag(passwordHash)
             
 
-    def write(self, stream: SWFInputStream) -> None:
+    def write(self, stream: SWFOutputStream) -> None:
         if stream.version < 1:
             raise ValueError("bad swf version")
             
