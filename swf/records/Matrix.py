@@ -12,11 +12,11 @@ class Matrix:
     translateX: int
     translateY: int
     
-    def __init__(self, translateX: int, translateY: int):
-        self.scaleX = 1.0
-        self.scaleY = 1.0
-        self.rotateSkew0 = 0.0
-        self.rotateSkew1 = 0.0
+    def __init__(self, translateX: int, translateY: int, *, scaleX: float = 1.0, scaleY: float = 1.0, rotateSkew0: float = 0.0, rotateSkew1: float = 0.0):
+        self.scaleX = scaleX
+        self.scaleY = scaleY
+        self.rotateSkew0 = rotateSkew0
+        self.rotateSkew1 = rotateSkew1
         self.translateX = translateX
         self.translateY = translateY
 
@@ -30,3 +30,13 @@ class Matrix:
 
     def __hash__(self) -> int:
         return hash((self.scaleX, self.scaleY, self.rotateSkew0, self.rotateSkew1, self.translateX, self.translateY))
+    
+
+    def __repr__(self) -> str:
+        ret = "Matrix(%r, %r" % (self.translateX, self.translateY)
+        if self.scaleX != 1.0 and self.scaleY != 1.0:
+            ret += ", scaleX=%r, scaleY=%r" % (self.scaleX, self.scaleY)
+        if self.rotateSkew0 != 0.0 and self.rotateSkew1 != 0.0:
+            ret += ", rotateSkew0=%r, rotateSkew1=%r" % (self.rotateSkew0, self.rotateSkew1)
+        ret += ")"
+        return ret

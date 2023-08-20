@@ -21,3 +21,7 @@ class Rectangle:
 
     def __hash__(self) -> int:
         return hash((self.xMin, self.xMax, self.yMin, self.yMax))
+    
+
+    def __repr__(self) -> str:
+        return "Rectangle(%r, %r, %r, %r)" % (self.xMin, self.xMax, self.yMin, self.yMax)

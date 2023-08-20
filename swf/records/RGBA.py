@@ -16,3 +16,7 @@ class RGBA(RGB):
 
     def __hash__(self) -> int:
         return (self.red << 24) + (self.green << 16) + (self.blue << 8) + (self.alpha)
+    
+
+    def __repr__(self) -> str:
+        return "RGBA(%r, %r, %r, %r)" % (self.red, self.green, self.blue, self.alpha)

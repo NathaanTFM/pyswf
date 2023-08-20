@@ -19,3 +19,7 @@ class RGB:
 
     def __hash__(self) -> int:
         return (self.red << 16) + (self.green << 8) + (self.blue)
+    
+
+    def __repr__(self) -> str:
+        return "RGB(%r, %r, %r)" % (self.red, self.green, self.blue)
