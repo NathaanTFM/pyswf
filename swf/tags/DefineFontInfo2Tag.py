@@ -1,6 +1,7 @@
 from __future__ import annotations
 from swf.tags.Tag import Tag
 from swf.stream.SWFInputStream import SWFInputStream
+from swf.stream.SWFOutputStream import SWFOutputStream
 
 class DefineFontInfo2Tag(Tag):
     """
@@ -14,8 +15,12 @@ class DefineFontInfo2Tag(Tag):
     def read(stream: SWFInputStream) -> Tag:
         if stream.version < 1:
             raise ValueError("bad swf version")
+        
+        raise NotImplementedError()
 
 
-    def export(self, stream: SWFInputStream) -> None:
+    def write(self, stream: SWFOutputStream) -> None:
         if stream.version < 1:
             raise ValueError("bad swf version")
+        
+        raise NotImplementedError()
