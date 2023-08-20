@@ -1,7 +1,7 @@
 from __future__ import annotations
-from swf.stream.SWFOutputStream import SWFOutputStream
 from swf.tags.Tag import Tag
 from swf.stream.SWFInputStream import SWFInputStream
+from swf.stream.SWFOutputStream import SWFOutputStream
 
 class FrameLabelTag(Tag):
     """
