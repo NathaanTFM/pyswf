@@ -2,7 +2,6 @@ from __future__ import annotations
 from swf.actions.ClipActionRecord import ClipActionRecord
 from swf.filters.Filter import Filter
 from swf.filters.FilterList import FilterList
-from swf.records.ColorTransform import ColorTransform
 from swf.records.ColorTransformWithAlpha import ColorTransformWithAlpha
 from swf.records.Matrix import Matrix
 from swf.records.RGBA import RGBA
