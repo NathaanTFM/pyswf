@@ -1,6 +1,7 @@
 from __future__ import annotations
 from swf.tags.Tag import Tag
 from swf.stream.SWFInputStream import SWFInputStream
+from swf.stream.SWFOutputStream import SWFOutputStream
 
 class ProtectTag(Tag):
     """
@@ -27,9 +28,15 @@ class ProtectTag(Tag):
 
             password = stream.readString()
 
-        return ProtectTag(password)        
+        return ProtectTag(password)
 
 
-    def export(self, stream: SWFInputStream) -> None:
+    def write(self, stream: SWFOutputStream) -> None:
         if stream.version < 2:
             raise ValueError("bad swf version")
+        
+        if self.password is not None:
+            if stream.version < 5:
+                raise ValueError("not supported password")
+            
+            stream.writeString(self.password)
