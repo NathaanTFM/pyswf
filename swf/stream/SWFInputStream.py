@@ -7,6 +7,14 @@ from swf.records.Rectangle import Rectangle
 from swf.records.Matrix import Matrix
 from swf.records.ColorTransform import ColorTransform
 from swf.records.ColorTransformWithAlpha import ColorTransformWithAlpha
+from typing import TYPE_CHECKING
+
+import os
+DEBUGGING = int(os.environ.get("PYSWF_DEBUG", 0)) >= 2
+if DEBUGGING:
+    import types
+    from typing import Any
+    import inspect
 
 class SWFInputStream:
     version: int
@@ -16,6 +24,29 @@ class SWFInputStream:
         self.__data = bytearray(data)
         self.__position = 0
         self.__bitposition = 0
+
+        # are we in hyper ultra mega verbose mode?
+        if DEBUGGING:
+            def verbosefunc(func: Any) -> Any:
+                def tmpfunc(*args: Any, **kwargs: Any) -> Any:
+                    ret = func(*args, **kwargs)
+
+                    caller = inspect.stack()[1]
+                    filename = os.path.basename(caller.filename)
+
+                    # most recent caller is SWFInputStream, give up
+                    if filename != "SWFInputStream.py":
+                        print(filename + ":" + str(caller.lineno) + " -> " + str(func.__name__) + repr(args) + " = " + repr(ret))
+
+                    return ret
+                
+                return tmpfunc
+            
+            import types
+            for name in dir(self):
+                value = getattr(self, name)
+                if name.startswith("read") and isinstance(value, types.MethodType):
+                    setattr(self, name, verbosefunc(value))
 
 
     def available(self) -> int:

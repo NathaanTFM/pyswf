@@ -5,6 +5,12 @@ from swf.tags.RawTag import RawTag
 from swf.stream.SWFInputStream import SWFInputStream
 from swf.stream.SWFOutputStream import SWFOutputStream
 
+from typing import TYPE_CHECKING
+import os
+DEBUGGING = int(os.environ.get("PYSWF_DEBUG", 0)) >= 1
+if DEBUGGING:
+    import sys
+
 class TagStream:
     notImplemented: set[str] = set()
 
@@ -27,7 +33,11 @@ class TagStream:
 
         # check if we're interested in this tag, if not, just skip
         if interestedSet is not None and tagCode not in interestedSet:
-            return RawTag(tagCode, tagData)
+            tag = RawTag(tagCode, tagData)
+            if DEBUGGING:
+                tag._tmp = tagData # type: ignore
+                
+            return tag
 
         # find tag class
         if tagCode >= len(TagDict):
@@ -37,15 +47,23 @@ class TagStream:
         if tagType is None:
             raise ValueError("tag %d not found" % tagCode)
             
+        if DEBUGGING:
+            print("\n" * 3)
+            print("Reading tag %r" % tagType.__name__)
+
         # create our tag
-        tag = tagType.read(stream)
+        try:
+            tag = tagType.read(stream)
+        except NotImplementedError:
+            tag = None
 
         # check our tag
         if tag:
             if stream.available() > 1:
                 print("data left (%d) after reading %s" % (stream.available(), tagType.__name__))
 
-            #tag._tmp = tagData # type: ignore
+            if DEBUGGING:
+                tag._tmp = tagData # type: ignore
 
         else:
             if tagType.__name__ not in TagStream.notImplemented:
@@ -53,7 +71,8 @@ class TagStream:
                 TagStream.notImplemented.add(tagType.__name__)
                 
             tag = RawTag(tagCode, tagData)
-            #tag._tmp = tagData # type: ignore
+            if DEBUGGING:
+                tag._tmp = tagData # type: ignore
             
         return tag
 
@@ -62,7 +81,12 @@ class TagStream:
     @staticmethod
     def writeTag(stream: SWFOutputStream, tag: Tag) -> None:
         # export tag
+        if DEBUGGING:
+            print("\n" * 3)
+            print("Writing tag %r" % tag)
+
         tagStream = SWFOutputStream(stream.version)
+        
         try:
             tag.write(tagStream)
         except Exception as e:
@@ -71,22 +95,28 @@ class TagStream:
         
         data = tagStream.getBytes()
 
-        """if data != tag._tmp: # type: ignore
-            print("[!!!] tag mismatch (%s)" % tag.__class__.__name__)
-            print("      length %d (orig %d)" % (len(data), len(tag._tmp))) # type: ignore
+        # XXX ultra supra debugging mode
+        if DEBUGGING:
+            tmp: bytes = tag._tmp # type: ignore 
 
-            if "-v" in __import__("sys").argv:
-                print("== New ==")
-                for n in range(0, len(data), 32):
-                    print(data[n:n+32].hex(":", 1))
+            if data != tmp:
+                print("[!!!] tag mismatch (%s)" % tag.__class__.__name__)
+                print("      length %d (orig %d)" % (len(data), len(tmp)))
 
-                print("")
-                print("== Original ==")
-                for n in range(0, len(tag._tmp), 32): # type: ignore
-                    print(tag._tmp[n:n+32].hex(":", 1)) # type: ignore
+                if "-v" in sys.argv:
+                    print("== New ==")
+                    for n in range(0, len(data), 32):
+                        print(data[n:n+32].hex(":", 1))
 
-            st = SWFInputStream(stream.version, data)
-            type(tag).read(st)"""
+                    print("")
+                    print("== Original ==")
+                    for n in range(0, len(tmp), 32):
+                        print(tmp[n:n+32].hex(":", 1))
+
+                st = SWFInputStream(stream.version, data)
+                print("\n" * 3)
+                print("Attempt to read broken tag rn")
+                type(tag).read(st)
 
         # tag header
         if len(data) < 0x3F:
