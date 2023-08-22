@@ -16,14 +16,87 @@ class DefineBitsLossless2Tag(Tag):
     bitmapFormat: int
     bitmapWidth: int
     bitmapHeight: int
-    pixelData: list[RGBA]
+    bitmapColorTableSize: int | None
+    bitmapData: bytes | None
 
-    def __init__(self, characterId: int, bitmapFormat: int, bitmapWidth: int, bitmapHeight: int, pixelData: list[RGBA]) -> None:
+    def __init__(self, characterId: int, bitmapFormat: int, bitmapWidth: int, bitmapHeight: int, bitmapColorTableSize: int | None, bitmapData: bytes | None) -> None:
         self.characterId = characterId
         self.bitmapFormat = bitmapFormat
         self.bitmapWidth = bitmapWidth
         self.bitmapHeight = bitmapHeight
-        self.pixelData = pixelData
+        self.bitmapColorTableSize = bitmapColorTableSize
+        self.bitmapData = bitmapData
+
+
+    def getPixelData(self) -> list[RGBA]:
+        if self.bitmapData is None:
+            raise TypeError("bitmapData is None")
+        
+        bitmapData = SWFInputStream(0, self.bitmapData)
+        
+        if self.bitmapFormat == 3:
+            if self.bitmapColorTableSize is None:
+                raise TypeError("bitmapColorTableSize is None for bitmapFormat 3")
+            
+            # AlphaColorMapData
+            padding = (4 - self.bitmapWidth % 4) % 4
+
+            colorTableRGBA = [bitmapData.readRGBA() for n in range(self.bitmapColorTableSize + 1)]
+            colormapPixelData = []
+            
+            for height in range(self.bitmapHeight):
+                for width in range(self.bitmapWidth):
+                    colormapPixelData.append(bitmapData.readUI8())
+                
+                if padding:
+                    bitmapData.skip(padding)
+            
+            pixelData = [colorTableRGBA[x] for x in colormapPixelData]
+            
+        else:
+            # BitmapData
+            bitmapPixelData: list[RGBA] = []
+            for height in range(self.bitmapHeight):
+                for width in range(self.bitmapWidth):
+                    bitmapPixelData.append(bitmapData.readARGB())
+                    
+            pixelData = bitmapPixelData
+
+
+        assert bitmapData.available() == 0
+        return pixelData
+
+
+    def setPixelData(self, pixelData: list[RGBA]) -> None:
+        bitmapData = SWFOutputStream(0)
+
+        if self.bitmapFormat == 3:
+            padding = (4 - self.bitmapWidth % 4) % 4
+            colorTableRGBA: list[RGBA] = []
+
+            for color in pixelData:
+                if color not in colorTableRGBA:
+                    colorTableRGBA.append(color)
+                    bitmapData.writeRGBA(color)
+
+            for y in range(self.bitmapHeight):
+                for x in range(self.bitmapWidth):
+                    color = pixelData[x + y * self.bitmapWidth]
+                    bitmapData.writeUI8(colorTableRGBA.index(color))
+
+                bitmapData.write(b"\0" * padding)
+
+            self.bitmapColorTableSize = len(colorTableRGBA) - 1
+
+        else:
+            self.bitmapColorTableSize = None
+
+            for y in range(self.bitmapHeight):
+                for x in range(self.bitmapWidth):
+                    color = pixelData[x + y * self.bitmapWidth]
+                    bitmapData.writeARGB(color)
+
+        self.bitmapData = bitmapData.getBytes()
         
 
     @staticmethod
@@ -39,39 +112,14 @@ class DefineBitsLossless2Tag(Tag):
         bitmapWidth = stream.readUI16()
         bitmapHeight = stream.readUI16()
         
+        bitmapColorTableSize = None
         if bitmapFormat == 3:
             bitmapColorTableSize = stream.readUI8()
         
         zlibBitmapData = stream.read(stream.available())
-        bitmapData = SWFInputStream(stream.version, zlib.decompress(zlibBitmapData))
-        
-        if bitmapFormat == 3:
-            # AlphaColorMapData
-            padding = (4 - bitmapWidth % 4) % 4
+        bitmapData = zlib.decompress(zlibBitmapData)
 
-            colorTableRGBA = [bitmapData.readRGBA() for n in range(bitmapColorTableSize + 1)]
-            colormapPixelData = []
-            
-            for height in range(bitmapHeight):
-                for width in range(bitmapWidth):
-                    colormapPixelData.append(bitmapData.readUI8())
-                
-                if padding:
-                    bitmapData.skip(padding)
-            
-            pixelData = [colorTableRGBA[x] for x in colormapPixelData]
-            
-        else:
-            # BitmapData
-            bitmapPixelData: list[RGBA] = []
-            for height in range(bitmapHeight):
-                for width in range(bitmapWidth):
-                    bitmapPixelData.append(bitmapData.readARGB())
-                    
-            pixelData = bitmapPixelData
-
-        assert bitmapData.available() == 0
-        return DefineBitsLossless2Tag(characterId, bitmapFormat, bitmapWidth, bitmapHeight, pixelData)
+        return DefineBitsLossless2Tag(characterId, bitmapFormat, bitmapWidth, bitmapHeight, bitmapColorTableSize, bitmapData)
 
 
     def write(self, stream: SWFOutputStream) -> None:
@@ -86,31 +134,13 @@ class DefineBitsLossless2Tag(Tag):
         stream.writeUI16(self.bitmapWidth)
         stream.writeUI16(self.bitmapHeight)
 
-        bitmapData = SWFOutputStream(stream.version)
-
         if self.bitmapFormat == 3:
-            padding = (4 - self.bitmapWidth % 4) % 4
-            colorTableRGBA: list[RGBA] = []
+            if self.bitmapColorTableSize is None:
+                raise TypeError("bitmapColorTableSize is None for bitmapFormat 3")
+            
+            stream.writeUI8(self.bitmapColorTableSize)
 
-            for color in self.pixelData:
-                if color not in colorTableRGBA:
-                    colorTableRGBA.append(color)
-                    bitmapData.writeRGBA(color)
-
-            for y in range(self.bitmapHeight):
-                for x in range(self.bitmapWidth):
-                    color = self.pixelData[x + y * self.bitmapWidth]
-                    bitmapData.writeUI8(colorTableRGBA.index(color))
-
-                bitmapData.write(b"\0" * padding)
-
-            stream.writeUI8(len(colorTableRGBA) - 1)
-
-        else:
-            for y in range(self.bitmapHeight):
-                for x in range(self.bitmapWidth):
-                    color = self.pixelData[x + y * self.bitmapWidth]
-                    bitmapData.writeARGB(color)
-
-
-        stream.write(zlib.compress(bitmapData.getBytes(), 9))
+        if self.bitmapData is None:
+            raise TypeError("bitmapData is None")
+        
+        stream.write(zlib.compress(self.bitmapData, 9))
