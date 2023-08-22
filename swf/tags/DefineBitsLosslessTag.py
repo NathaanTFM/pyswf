@@ -154,7 +154,7 @@ class DefineBitsLosslessTag(Tag):
             if self.bitmapColorTableSize is None:
                 raise TypeError("bitmapColorTableSize is None for bitmapFormat 3")
             
-            stream.writeUI8(self.bitmapColorTableSize - 1)
+            stream.writeUI8(self.bitmapColorTableSize)
 
         if self.bitmapData is None:
             raise TypeError("bitmapData is None")
