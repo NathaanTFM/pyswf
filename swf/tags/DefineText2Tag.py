@@ -40,7 +40,7 @@ class DefineText2Tag(Tag):
         advanceBits = stream.readUI8()
         textRecords = []
         while 1:
-            record: TextRecord[RGBA] | None = TextRecord.read(stream, 1, glyphBits, advanceBits)
+            record: TextRecord[RGBA] | None = TextRecord.read(stream, 2, glyphBits, advanceBits)
             if not record:
                 break
 
@@ -63,6 +63,6 @@ class DefineText2Tag(Tag):
         stream.writeUI8(advanceBits)
 
         for record in self.textRecords:
-            record.write(stream, 1, glyphBits, advanceBits)
+            record.write(stream, 2, glyphBits, advanceBits)
 
         stream.writeUI8(0)
