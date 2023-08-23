@@ -1,5 +1,7 @@
 from __future__ import annotations
 from swf.enums.ClipEventFlags import ClipEventFlags
+from swf.stream.ActionStream import ActionStream
+from swf.actions.ActionRecord import ActionRecord
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -9,12 +11,12 @@ if TYPE_CHECKING:
 class ClipActionRecord:
     eventFlags: ClipEventFlags
     keyCode: int | None
-    actionRecords: bytes
+    actions: list[ActionRecord]
 
-    def __init__(self, eventFlags: ClipEventFlags, keyCode: int | None, actionRecords: bytes) -> None:
+    def __init__(self, eventFlags: ClipEventFlags, keyCode: int | None, actions: list[ActionRecord]) -> None:
         self.eventFlags = eventFlags
         self.keyCode = keyCode
-        self.actionRecords = actionRecords
+        self.actions = actions
 
     
     @staticmethod
@@ -33,19 +35,22 @@ class ClipActionRecord:
 
             allEventFlagsCheck |= eventFlags
 
-            actionRecordSize = stream.readUI32()
+            actionRecordSize = stream.readUI32() # TODO
 
             keyCode = None
             if eventFlags & ClipEventFlags.KEY_PRESS:
                 keyCode = stream.readUI8()
             
-            actionRecords = stream.read(actionRecordSize) #SWFInputStream(stream.version, )
-            #while actionRecords.available():
-            #    actionCode = actionRecords.readUI8()
-            #    if actionCode >= 0x80:
-            #        length = actionRecords.readUI16()
-            #        data = actionRecords.read(length)
-            res.append(ClipActionRecord(eventFlags, keyCode, actionRecords))
+            #actionRecords = stream.read(actionRecordSize)
+            actions = []
+            while 1:
+                action = ActionStream.readAction(stream)
+                if not action:
+                    break
+
+                actions.append(action)
+
+            res.append(ClipActionRecord(eventFlags, keyCode, actions))
         
         if allEventFlags != allEventFlagsCheck:
             raise Exception("all event flags is wrong")
@@ -69,12 +74,15 @@ class ClipActionRecord:
             if not elem.eventFlags:
                 raise Exception("event flags is zero")
 
-            stream.writeUI32(len(elem.actionRecords))
+            stream.writeUI32(0) # TO fucking DO
 
             if elem.eventFlags & ClipEventFlags.KEY_PRESS:
                 assert elem.keyCode is not None
                 stream.writeUI8(elem.keyCode)
 
-            stream.write(elem.actionRecords)
+            for action in elem.actions:
+                ActionStream.writeAction(stream, action)
+
+            stream.writeUI8(0)
 
         ClipEventFlags(0).write(stream)
