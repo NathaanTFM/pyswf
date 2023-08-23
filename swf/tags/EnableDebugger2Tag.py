@@ -5,7 +5,8 @@ from swf.stream.SWFOutputStream import SWFOutputStream
 
 class EnableDebugger2Tag(Tag):
     """
-    The EnableDebugger2 tag enables debugging.
+    The EnableDebugger2 tag enables debugging. The Password field is
+    encrypted by using the MD5 algorithm, in the same way as the Protect tag.
     """
     tagId = 64
 

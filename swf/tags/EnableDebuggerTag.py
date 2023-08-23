@@ -5,22 +5,29 @@ from swf.stream.SWFOutputStream import SWFOutputStream
 
 class EnableDebuggerTag(Tag):
     """
-    The ShowFrame tag instructs Flash Player to display the
-    contents of the display list. The file is paused for
-    the duration of a single frame.
+    The EnableDebugger tag enables debugging. The password in the
+    EnableDebugger tag is encrypted by using the MD5 algorithm,
+    in the same way as the Protect tag.
     """
     tagId = 58
 
+    password: str
+
+    def __init__(self, password: str) -> None:
+        self.password = password
+
+
     @staticmethod
     def read(stream: SWFInputStream) -> Tag:
-        if stream.version < 1:
+        if stream.version < 5:
             raise ValueError("bad swf version")
-        
-        raise NotImplementedError()
+
+        password = stream.readString()
+        return EnableDebuggerTag(password)
 
 
     def write(self, stream: SWFOutputStream) -> None:
-        if stream.version < 1:
+        if stream.version < 5:
             raise ValueError("bad swf version")
-        
-        raise NotImplementedError()
+
+        stream.writeString(self.password)
