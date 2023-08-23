@@ -5,22 +5,31 @@ from swf.stream.SWFOutputStream import SWFOutputStream
 
 class VideoFrameTag(Tag):
     """
-    The ShowFrame tag instructs Flash Player to display the
-    contents of the display list. The file is paused for
-    the duration of a single frame.
+    VideoFrame provides a single frame of video data
+    for a video character that is already defined with 
+    DefineVideoStream
     """
     tagId = 61
 
+    streamId: int
+    frameNum: int
+    videoData: bytes
+
+    def __init__(self, streamId: int, frameNum: int, videoData: bytes) -> None:
+        self.streamId = streamId
+        self.frameNum = frameNum
+        self.videoData = videoData
+
+
     @staticmethod
     def read(stream: SWFInputStream) -> Tag:
-        if stream.version < 1:
-            raise ValueError("bad swf version")
-        
-        raise NotImplementedError()
+        streamId = stream.readUI16()
+        frameNum = stream.readUI16()
+        videoData = stream.read(stream.available())
+        return VideoFrameTag(streamId, frameNum, videoData)
 
 
     def write(self, stream: SWFOutputStream) -> None:
-        if stream.version < 1:
-            raise ValueError("bad swf version")
-        
-        raise NotImplementedError()
+        stream.writeUI16(self.streamId)
+        stream.writeUI16(self.frameNum)
+        stream.write(self.videoData)
