@@ -10,13 +10,16 @@ from swf.records.ColorTransformWithAlpha import ColorTransformWithAlpha
 from typing import TYPE_CHECKING
 
 import os
-DEBUGGING = int(os.environ.get("PYSWF_DEBUG", 0)) >= 2
+DEBUGGING = int(os.environ.get("PYSWF_DEBUG", 0)) >= 1
 if DEBUGGING:
     import types
     from typing import Any
     import inspect
 
 class SWFInputStream:
+    if DEBUGGING:
+        debugBuffer: str = ""
+
     version: int
 
     def __init__(self, version: int, data: bytes) -> None:
@@ -36,7 +39,7 @@ class SWFInputStream:
 
                     # most recent caller is SWFInputStream, give up
                     if filename != "SWFInputStream.py":
-                        print(filename + ":" + str(caller.lineno) + " -> " + str(func.__name__) + repr(args) + " = " + repr(ret))
+                        SWFInputStream.debugBuffer += (filename + ":" + str(caller.lineno) + " -> " + str(func.__name__) + repr(args) + " = " + repr(ret)) + "\n"
 
                     return ret
                 
