@@ -2,25 +2,43 @@ from __future__ import annotations
 from swf.tags.Tag import Tag
 from swf.stream.SWFInputStream import SWFInputStream
 from swf.stream.SWFOutputStream import SWFOutputStream
+from swf.stream.ActionStream import ActionStream
+from swf.actions.ActionRecord import ActionRecord
 
 class DoActionTag(Tag):
     """
-    The ShowFrame tag instructs Flash Player to display the
-    contents of the display list. The file is paused for
-    the duration of a single frame.
+    DoAction instructs Flash Player to perform a list of actions
+    when the current frame is complete.
     """
     tagId = 12
 
+    actions: list[ActionRecord]
+
+    def __init__(self, actions: list[ActionRecord]) -> None:
+        self.actions = actions
+
+
     @staticmethod
     def read(stream: SWFInputStream) -> Tag:
-        if stream.version < 1:
+        if stream.version < 6:
             raise ValueError("bad swf version")
         
-        raise NotImplementedError()
+        actions = []
+        while 1:
+            action = ActionStream.readAction(stream)
+            if action is None:
+                break
+
+            actions.append(action)
+
+        return DoActionTag(actions)
 
 
     def write(self, stream: SWFOutputStream) -> None:
-        if stream.version < 1:
+        if stream.version < 6:
             raise ValueError("bad swf version")
-        
-        raise NotImplementedError()
+
+        for action in self.actions:
+            ActionStream.writeAction(stream, action)
+
+        stream.writeUI8(0)
