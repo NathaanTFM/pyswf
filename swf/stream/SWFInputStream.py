@@ -359,12 +359,7 @@ class SWFInputStream:
         translateY = self.readSB(nTranslateBits)
         self.align()
         
-        mat = Matrix(translateX, translateY)
-        mat.scaleX = scaleX
-        mat.scaleY = scaleY
-
-        mat.rotateSkew0 = rotateSkew0
-        mat.rotateSkew1 = rotateSkew1
+        mat = Matrix(translateX, translateY, scaleX=scaleX, scaleY=scaleY, rotateSkew0=rotateSkew0, rotateSkew1=rotateSkew1)
         return mat
 
 
