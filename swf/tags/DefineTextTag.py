@@ -5,6 +5,7 @@ from swf.stream.SWFOutputStream import SWFOutputStream
 from swf.records.Rectangle import Rectangle
 from swf.records.Matrix import Matrix
 from swf.texts.TextRecord import TextRecord
+from swf.records.RGB import RGB
 
 class DefineTextTag(Tag):
     """
@@ -17,9 +18,9 @@ class DefineTextTag(Tag):
     characterId: int
     textBounds: Rectangle
     textMatrix: Matrix
-    textRecords: list[TextRecord]
+    textRecords: list[TextRecord[RGB]]
 
-    def __init__(self, characterId: int, textBounds: Rectangle, textMatrix: Matrix, textRecords: list[TextRecord]) -> None:
+    def __init__(self, characterId: int, textBounds: Rectangle, textMatrix: Matrix, textRecords: list[TextRecord[RGB]]) -> None:
         self.characterId = characterId
         self.textBounds = textBounds
         self.textMatrix = textMatrix
@@ -38,7 +39,7 @@ class DefineTextTag(Tag):
         advanceBits = stream.readUI8()
         textRecords = []
         while 1:
-            record = TextRecord.read(stream, 1, glyphBits, advanceBits)
+            record: TextRecord[RGB] | None = TextRecord.read(stream, 1, glyphBits, advanceBits)
             if not record:
                 break
 

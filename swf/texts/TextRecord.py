@@ -1,19 +1,22 @@
 from __future__ import annotations
+from typing import TypeVar, Generic, Type
 from swf.stream.SWFInputStream import SWFInputStream
 from swf.stream.SWFOutputStream import SWFOutputStream
 from swf.texts.GlyphEntry import GlyphEntry
 from swf.records.RGB import RGB
 from swf.records.RGBA import RGBA
 
-class TextRecord:
+C = TypeVar("C", RGB, RGBA)
+
+class TextRecord(Generic[C]):
     fontId: int | None
-    textColor: RGB | RGBA | None
+    textColor: C | None
     xOffset: int | None
     yOffset: int | None
     textHeight: int | None
     glyphEntries: list[GlyphEntry]
 
-    def __init__(self, fontId: int | None, textColor: RGB | RGBA | None, xOffset: int | None, yOffset: int | None, textHeight: int | None, glyphEntries: list[GlyphEntry]) -> None:
+    def __init__(self, fontId: int | None, textColor: C | None, xOffset: int | None, yOffset: int | None, textHeight: int | None, glyphEntries: list[GlyphEntry]) -> None:
         self.fontId = fontId
         self.textColor = textColor
         self.xOffset = xOffset
@@ -23,7 +26,7 @@ class TextRecord:
 
 
     @staticmethod
-    def read(stream: SWFInputStream, tag: int, glyphBits: int, advanceBits: int) -> TextRecord | None:
+    def read(stream: SWFInputStream, tag: int, glyphBits: int, advanceBits: int) -> TextRecord[C] | None:
         textRecordType = stream.readUB(1)
 
         styleFlagsReserved = stream.readUB(3)
@@ -46,12 +49,12 @@ class TextRecord:
         if styleFlagsHasFont:
             fontId = stream.readUI16()
 
-        textColor: RGB | RGBA | None = None
+        textColor: C | None = None
         if styleFlagsHasColor:
             if tag == 2:
                 textColor = stream.readRGBA()
             else:
-                textColor = stream.readRGB()
+                textColor = stream.readRGB() # type: ignore
         
         xOffset = None
         if styleFlagsHasXOffset:
