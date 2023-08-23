@@ -5,29 +5,29 @@ import os
 class Debugging:
     if __debug__:
         try:
-            flag = int(os.environ.get("PYSWF_DEBUG", 0))
+            level = int(os.environ.get("PYSWF_DEBUG", 0))
         except ValueError:
-            flag = 0
+            level = 0
     else:
-        flag = 0
+        level = 0
 
     @staticmethod
     def enableStreamVerbose() -> bool:
-        return Debugging.flag >= 2
+        return Debugging.level >= 4
     
     @staticmethod
     def enableTagCounter() -> bool:
-        return Debugging.flag >= 1
+        return Debugging.level >= 2
     
     @staticmethod
     def printVerbose(*args: Any, **kwargs: Any) -> None:
-        if Debugging.flag >= 1:
+        if Debugging.level >= 1:
             print(*args, **kwargs)
 
     @staticmethod
     def showNotImplemented() -> bool:
-        return Debugging.flag >= 1
+        return Debugging.level >= 1
     
     @staticmethod
     def enableRawTag() -> bool:
-        return Debugging.flag >= 1
+        return Debugging.level >= 2
