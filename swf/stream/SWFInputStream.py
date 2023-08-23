@@ -1,5 +1,5 @@
 from __future__ import annotations
-import struct
+from typing import Any
 from swf.enums.LanguageCode import LanguageCode
 from swf.records.RGB import RGB
 from swf.records.RGBA import RGBA
@@ -7,17 +7,12 @@ from swf.records.Rectangle import Rectangle
 from swf.records.Matrix import Matrix
 from swf.records.ColorTransform import ColorTransform
 from swf.records.ColorTransformWithAlpha import ColorTransformWithAlpha
-from typing import TYPE_CHECKING
+from swf.Debugging import Debugging
+import struct
 
-import os
-DEBUGGING = int(os.environ.get("PYSWF_DEBUG", 0)) >= 1
-if DEBUGGING:
-    import types
-    from typing import Any
-    import inspect
 
 class SWFInputStream:
-    if DEBUGGING:
+    if Debugging.enableStreamVerbose():
         debugBuffer: str = ""
 
     version: int
@@ -29,7 +24,8 @@ class SWFInputStream:
         self.__bitposition = 0
 
         # are we in hyper ultra mega verbose mode?
-        if DEBUGGING:
+        if Debugging.enableStreamVerbose():
+            import os, inspect
             def verbosefunc(func: Any) -> Any:
                 def tmpfunc(*args: Any, **kwargs: Any) -> Any:
                     ret = func(*args, **kwargs)

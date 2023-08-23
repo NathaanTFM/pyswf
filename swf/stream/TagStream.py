@@ -4,18 +4,15 @@ from swf.tags.Tag import Tag
 from swf.tags.RawTag import RawTag
 from swf.stream.SWFInputStream import SWFInputStream
 from swf.stream.SWFOutputStream import SWFOutputStream
-
-from typing import TYPE_CHECKING
-import os
-DEBUGGING = int(os.environ.get("PYSWF_DEBUG", 0)) >= 1
-if DEBUGGING:
-    import sys
+from swf.Debugging import Debugging
+import sys
 
 class TagStream:
-    if DEBUGGING:
+    if Debugging.enableTagCounter():
         debugTagCounter: int = 0
 
-    notImplemented: set[str] = set()
+    if Debugging.showNotImplemented():
+        notImplemented: set[str] = set()
 
     @staticmethod
     def readTag(stream: SWFInputStream, interestedSet: set[int] | None = None) -> Tag:
@@ -49,8 +46,9 @@ class TagStream:
         if tagType is None:
             raise ValueError("tag %d not found" % tagCode)
             
-        if DEBUGGING:
-            print("Reading tag %r" % tagType.__name__)
+        Debugging.printVerbose("Reading tag %r" % tagType.__name__)
+
+        if Debugging.enableStreamVerbose():
             SWFInputStream.debugBuffer = ""
 
         # create our tag
@@ -58,21 +56,27 @@ class TagStream:
             tag = tagType.read(stream)
 
         except NotImplementedError:
-            if tagType.__name__ not in TagStream.notImplemented:
-                print("not implemented %s" % tagType.__name__)
-                TagStream.notImplemented.add(tagType.__name__)
+            if Debugging.showNotImplemented():
+                if tagType.__name__ not in TagStream.notImplemented:
+                    Debugging.printVerbose("missing tag implemented %s" % tagType.__name__)
+                    TagStream.notImplemented.add(tagType.__name__)
                 
             tag = RawTag(tagCode, tagData)
 
         else:
             if stream.available() > 1:
-                print("data left (%d) after reading %s" % (stream.available(), tagType.__name__))
+                Debugging.printVerbose("data left (%d) after reading %s" % (stream.available(), tagType.__name__))
 
-        if DEBUGGING:
-            tag._tmp = tagData # type: ignore
-            tag._debug = SWFInputStream.debugBuffer # type: ignore
+        if Debugging.enableRawTag():
+            tag._raw = tagData # type: ignore
+
+        if Debugging.enableTagCounter():
             tag._cnt = TagStream.debugTagCounter # type: ignore
             TagStream.debugTagCounter += 1
+
+        if Debugging.enableStreamVerbose():
+            tag._verb = SWFInputStream.debugBuffer # type: ignore
+
 
         return tag
 
@@ -80,46 +84,46 @@ class TagStream:
     @staticmethod
     def writeTag(stream: SWFOutputStream, tag: Tag) -> None:
         # export tag
-        if DEBUGGING:
-            print("Writing tag %r" % tag)
+        Debugging.printVerbose("Writing tag %r" % tag)
 
         tagStream = SWFOutputStream(stream.version)
         
         try:
             tag.write(tagStream)
         except Exception as e:
-            print("Failed to write %r" % tag)
+            print("Failed to write %r" % tag, file=sys.stderr)
             raise
         
         data = tagStream.getBytes()
 
         # XXX ultra supra debugging mode
-        if DEBUGGING and hasattr(tag, "_tmp"):
-            tmp: bytes = tag._tmp
+        if Debugging.enableRawTag():
+            tmp: bytes = tag._raw # type: ignore
 
             if data != tmp:
-                print("[!!!] tag mismatch (%s)" % tag.__class__.__name__)
-                print("      length %d (orig %d)" % (len(data), len(tmp)))
+                Debugging.printVerbose("[!!!] tag mismatch (%s)" % tag.__class__.__name__)
+                Debugging.printVerbose("      length %d (orig %d)" % (len(data), len(tmp)))
 
                 if "-v" in sys.argv:
-                    print("== New ==")
+                    Debugging.printVerbose("== New ==")
                     for n in range(0, len(data), 32):
-                        print(data[n:n+32].hex(":", 1))
+                        Debugging.printVerbose(data[n:n+32].hex(":", 1))
 
-                    print("")
-                    print("== Original ==")
+                    Debugging.printVerbose("")
+                    Debugging.printVerbose("== Original ==")
                     for n in range(0, len(tmp), 32):
-                        print(tmp[n:n+32].hex(":", 1))
+                        Debugging.printVerbose(tmp[n:n+32].hex(":", 1))
 
-                st = SWFInputStream(stream.version, data)
-                SWFInputStream.debugBuffer = ""
-                type(tag).read(st)
+                if Debugging.enableStreamVerbose():
+                    st = SWFInputStream(stream.version, data)
+                    SWFInputStream.debugBuffer = ""
+                    type(tag).read(st)
 
-                filename = "mismatch_%r_%i" % (type(tag).__name__, tag._cnt) # type: ignore
-                with open(filename + "_orig.txt", "w") as f:
-                    f.write(tag._debug) # type: ignore
-                with open(filename + "_new.txt", "w") as f:
-                    f.write(SWFInputStream.debugBuffer)
+                    filename = "mismatch_%r_%i" % (type(tag).__name__, getattr(tag, "_cnt", __import__("random").randint(1000, 9999)))
+                    with open(filename + "_orig.txt", "w") as f:
+                        f.write(tag._verb) # type: ignore
+                    with open(filename + "_new.txt", "w") as f:
+                        f.write(SWFInputStream.debugBuffer)
 
         # tag header
         if len(data) < 0x3F:

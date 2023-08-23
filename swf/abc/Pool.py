@@ -1,4 +1,5 @@
 from typing import Generic, Iterator, TypeVar, Hashable
+from swf.Debugging import Debugging
 
 T = TypeVar('T')
 
@@ -33,7 +34,7 @@ class Pool(Generic[T]):
         key = self._getKey(elt)
 
         if key in self.__poolDict:
-            print("duplicate element in pool (%r)" % elt)
+            Debugging.printVerbose("duplicate element in pool (%r)" % elt)
         else:
             self.__poolDict[key] = index
 
