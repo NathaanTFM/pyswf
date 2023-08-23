@@ -2,11 +2,8 @@ from __future__ import annotations
 from swf.enums.ClipEventFlags import ClipEventFlags
 from swf.stream.ActionStream import ActionStream
 from swf.actions.ActionRecord import ActionRecord
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from swf.stream.SWFInputStream import SWFInputStream
-    from swf.stream.SWFOutputStream import SWFOutputStream
+from swf.stream.SWFInputStream import SWFInputStream
+from swf.stream.SWFOutputStream import SWFOutputStream
 
 class ClipActionRecord:
     eventFlags: ClipEventFlags
@@ -73,16 +70,21 @@ class ClipActionRecord:
             elem.eventFlags.write(stream)
             if not elem.eventFlags:
                 raise Exception("event flags is zero")
-
-            stream.writeUI32(0) # TO fucking DO
+            
+            # another stream
+            strm2 = SWFOutputStream(stream.version)
 
             if elem.eventFlags & ClipEventFlags.KEY_PRESS:
                 assert elem.keyCode is not None
-                stream.writeUI8(elem.keyCode)
+                strm2.writeUI8(elem.keyCode)
 
             for action in elem.actions:
-                ActionStream.writeAction(stream, action)
+                ActionStream.writeAction(strm2, action)
 
-            stream.writeUI8(0)
+            strm2.writeUI8(0)
+
+            # back to stream
+            stream.writeUI32(strm2.getLength())
+            stream.write(strm2.getBytes())
 
         ClipEventFlags(0).write(stream)
