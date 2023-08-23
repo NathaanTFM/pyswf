@@ -5,22 +5,32 @@ from swf.stream.SWFOutputStream import SWFOutputStream
 
 class SetTabIndexTag(Tag):
     """
-    The ShowFrame tag instructs Flash Player to display the
-    contents of the display list. The file is paused for
-    the duration of a single frame.
+    The SetTabIndex tag sets the index of an object
+    within the tab order.
     """
     tagId = 66
 
+    depth: int
+    tabIndex: int
+
+    def __init__(self, depth: int, tabIndex: int) -> None:
+        self.depth = depth
+        self.tabIndex = tabIndex
+
+
     @staticmethod
     def read(stream: SWFInputStream) -> Tag:
-        if stream.version < 1:
+        if stream.version < 7:
             raise ValueError("bad swf version")
         
-        raise NotImplementedError()
+        depth = stream.readUI16()
+        tabIndex = stream.readUI16()
+        return SetTabIndexTag(depth, tabIndex)
 
 
     def write(self, stream: SWFOutputStream) -> None:
-        if stream.version < 1:
+        if stream.version < 7:
             raise ValueError("bad swf version")
         
-        raise NotImplementedError()
+        stream.writeUI16(self.depth)
+        stream.writeUI16(self.tabIndex)
