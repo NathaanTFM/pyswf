@@ -46,15 +46,15 @@ class MorphLineStyle2:
         endWidth = stream.readUI16()
         startCapStyle = stream.readUB(2)
         joinStyle = stream.readUB(2)
-        hasFillFlag = bool(stream.readUB(1))
-        noHScaleFlag = bool(stream.readUB(1))
-        noVScaleFlag = bool(stream.readUB(1))
-        pixelHintingFlag = bool(stream.readUB(1))
+        hasFillFlag = stream.readUB1()
+        noHScaleFlag = stream.readUB1()
+        noVScaleFlag = stream.readUB1()
+        pixelHintingFlag = stream.readUB1()
 
         if stream.readUB(5) != 0:
             raise ValueError("reserved is non zero")
 
-        noClose = bool(stream.readUB(1))
+        noClose = stream.readUB1()
         endCapStyle = stream.readUB(2)
         
         miterLimitFactor = None

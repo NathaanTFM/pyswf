@@ -44,9 +44,9 @@ class DefineShape4Tag(Tag):
         if stream.readUB(5) != 0:
             raise ValueError("reserved is non-zero")
 
-        usesFillWindingRule = bool(stream.readUB(1))
-        usesNonScalingStrokes = bool(stream.readUB(1))
-        usesScalingStrokes = bool(stream.readUB(1))
+        usesFillWindingRule = stream.readUB1()
+        usesNonScalingStrokes = stream.readUB1()
+        usesScalingStrokes = stream.readUB1()
         shapes = ShapeWithStyle.read(stream, 4, FillStyle, LineStyle2)
 
         return DefineShape4Tag(shapeId, shapeBounds, edgeBounds, usesFillWindingRule, usesNonScalingStrokes, usesScalingStrokes, shapes)

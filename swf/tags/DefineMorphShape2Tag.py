@@ -57,8 +57,8 @@ class DefineMorphShape2Tag(Tag):
         if stream.readUB(6) != 0:
             raise Exception("reserved is non-zero")
         
-        usesNonScalingStrokes = bool(stream.readUB(1))
-        usesScalingStrokes = bool(stream.readUB(1))
+        usesNonScalingStrokes = stream.readUB1()
+        usesScalingStrokes = stream.readUB1()
 
         offset = stream.readUI32()
         morphFillStyles = MorphFillStyle.readArray(stream, 1)
