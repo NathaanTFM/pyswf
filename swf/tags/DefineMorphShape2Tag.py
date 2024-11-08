@@ -80,11 +80,6 @@ class DefineMorphShape2Tag(Tag):
 
         # write this first (so we can get offset)
         strm2 = SWFOutputStream(stream.version)
-        strm2.writeRECT(self.startEdgeBounds)
-        strm2.writeRECT(self.endEdgeBounds)
-        strm2.writeUB(6, 0)
-        strm2.writeUB(1, int(self.usesNonScalingStrokes))
-        strm2.writeUB(1, int(self.usesScalingStrokes))
         MorphFillStyle.writeArray(strm2, self.morphFillStyles, 1)
         MorphLineStyle2.writeArray(strm2, self.morphLineStyles, 1)
 
@@ -96,5 +91,10 @@ class DefineMorphShape2Tag(Tag):
         stream.writeUI16(self.characterId)
         stream.writeRECT(self.startBounds)
         stream.writeRECT(self.endBounds)
+        stream.writeRECT(self.startEdgeBounds)
+        stream.writeRECT(self.endEdgeBounds)
+        stream.writeUB(6, 0)
+        stream.writeUB(1, int(self.usesNonScalingStrokes))
+        stream.writeUB(1, int(self.usesScalingStrokes))
         stream.writeUI32(offset)
         stream.write(strm2.getBytes())
